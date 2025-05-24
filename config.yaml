@@ -1,0 +1,41 @@
+# config.yaml
+
+data:
+  # directories where you saved the HF datasets
+  train_dataset_dir: "D:/git-repo/hand-writing-recognition/data/train.hf"
+  eval_dataset_dir:  "D:/git-repo/hand-writing-recognition/data/eval.hf"
+  test_dataset_dir:  "D:/git-repo/hand-writing-recognition/data/test.hf"
+  # column names produced by your preprocessing code
+  image_column: "image_path"
+  text_column:  "text"
+  # for quick experiments (<100), will subsample each split
+  train_subset_pct: 100
+  val_subset_pct:   100
+  test_subset_pct:  100
+
+model:
+  name_or_path:         "microsoft/trocr-small-handwritten"
+  output_dir:           "D:/git-repo/hand-writing-recognition/saved_models"
+  overwrite_output_dir: true
+
+processor:
+  use_fast: false
+
+preprocessing:
+  max_length: 128
+  padding:    "max_length"
+  truncation: true
+
+training:
+  num_train_epochs:               10
+  per_device_train_batch_size:    8
+  per_device_eval_batch_size:     8
+  lr_scheduler_type:              "linear"
+  warmup_steps:                   0
+  num_train_epochs:               10
+
+optimizer:
+  name: "AdamW"
+  params:
+    lr: 5e-5
+    weight_decay: 0.0
