@@ -56,21 +56,39 @@ def main():
     processor.image_processor.image_channel_first = False
 
     def preprocess(batch):
-        images = [PILImage.open(p).convert("RGB") for p in batch[data_cfg["image_column"]]]
-        pixel_values = processor(images=images, return_tensors="pt").pixel_values
+        pixel_values_list = []
+        labels_list = []
 
-        # Pad *all* sequences to max_length:
-        labels = processor.tokenizer(
-            batch[data_cfg["text_column"]],
-            padding="max_length",
-            max_length=cfg["preprocessing"]["max_length"],
-            truncation=cfg["preprocessing"]["truncation"],
-            return_tensors="pt"
-        ).input_ids
+        for img_path, label_text in zip(batch[data_cfg["image_column"]], batch[data_cfg["text_column"]]):
+            try:
+                img = PILImage.open(img_path).convert("RGB")
 
-        batch["pixel_values"] = pixel_values.tolist()
-        batch["labels"]       = labels.tolist()
-        return batch
+                # Process image individually
+                pixel_values = processor(images=img, return_tensors="pt").pixel_values[0]
+                label_ids = processor.tokenizer(
+                    label_text,
+                    padding="max_length",
+                    max_length=cfg["preprocessing"]["max_length"],
+                    truncation=cfg["preprocessing"]["truncation"],
+                    return_tensors="pt"
+                ).input_ids[0]
+
+                pixel_values_list.append(pixel_values)
+                labels_list.append(label_ids)
+
+            except Exception as e:
+                print(f"Skipping image {img_path} due to error: {e}")
+                continue
+
+        # If nothing was valid, return dummy entries to avoid crash
+        if not pixel_values_list:
+            return {"pixel_values": [], "labels": []}
+
+        # Stack into tensors
+        return {
+            "pixel_values": torch.stack(pixel_values_list).tolist(),
+            "labels": torch.stack(labels_list).tolist()
+        }
 
     # Apply preprocessing and drop original columns
     remove_cols = [data_cfg["image_column"], data_cfg["text_column"]]
