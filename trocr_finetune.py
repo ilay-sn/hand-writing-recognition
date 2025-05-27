@@ -55,12 +55,14 @@ training_args = Seq2SeqTrainingArguments(
     predict_with_generate=True,
     per_device_train_batch_size=8,
     per_device_eval_batch_size=8,
-    fp16=False,
+    fp16=True,
     output_dir="saved_models",
-    logging_steps=2,
-    save_steps=1000,
+    logging_steps=20,
+    save_strategy="epoch",
     eval_steps=200,
-    dataloader_pin_memory=False
+    dataloader_pin_memory=False,
+    num_train_epochs=15,
+    eval_strategy="epoch"
 )
 
 trainer = Seq2SeqTrainer(
